@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, PointerEvent, FocusEvent } from "react";
 import { Transition } from "react-transition-group";
 
 type Tab = { label: string; id: string };
@@ -66,8 +66,6 @@ export const TransitionGroupTabs = ({
   selectedTabIndex,
   setSelectedTab,
 }: Props): JSX.Element => {
-  const [hoveredTabIndex, setHoveredTabIndex] = useState<number | null>(null);
-
   const [buttonRefs, setButtonRefs] = useState<Array<HTMLButtonElement | null>>(
     []
   );
@@ -79,28 +77,31 @@ export const TransitionGroupTabs = ({
   const navRef = useRef<HTMLDivElement>(null);
   const navRect = navRef.current?.getBoundingClientRect();
 
+  const [hoveredTabIndex, setHoveredTabIndex] = useState<number | null>(null);
+  const [hoveredRect, setHoveredRect] = useState<DOMRect | null>(null);
+
   const isInitialElement = useRef(true);
-  const exitElement = useRef<DOMRect>();
 
   const selectedRect = buttonRefs[selectedTabIndex]?.getBoundingClientRect();
-  const hoveredRect =
-    buttonRefs[hoveredTabIndex ?? -1]?.getBoundingClientRect() ??
-    exitElement.current;
 
   const onLeaveTabs = () => {
     isInitialElement.current = true;
-    exitElement.current = hoveredRect;
     setHoveredTabIndex(null);
   };
 
-  const onEnterTab = (i: number) => {
-    exitElement.current = undefined;
+  const onEnterTab = (
+    e: PointerEvent<HTMLButtonElement> | FocusEvent<HTMLButtonElement>,
+    i: number
+  ) => {
+    if (!e.target || !(e.target instanceof HTMLButtonElement)) return;
+
     setHoveredTabIndex((prev) => {
       if (prev != null && prev !== i) {
         isInitialElement.current = false;
       }
       return i;
     });
+    setHoveredRect(e.target.getBoundingClientRect());
   };
 
   const onSelectTab = (i: number) => {
@@ -125,8 +126,8 @@ export const TransitionGroupTabs = ({
               }
             )}
             ref={(el) => (buttonRefs[i] = el)}
-            onPointerEnter={() => onEnterTab(i)}
-            onFocus={() => onEnterTab(i)}
+            onPointerEnter={(e) => onEnterTab(e, i)}
+            onFocus={(e) => onEnterTab(e, i)}
             onClick={() => onSelectTab(i)}
           >
             {item.label}

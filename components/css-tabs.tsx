@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import { useEffect, useRef, useState } from "react";
+import { PointerEvent, FocusEvent, useEffect, useRef, useState } from "react";
 
 type Tab = { label: string; id: string };
 
@@ -56,6 +56,7 @@ export const CSSTabs = ({
   setSelectedTab,
 }: Props): JSX.Element => {
   const [hoveredTabIndex, setHoveredTabIndex] = useState<number | null>(null);
+  const [hoveredRect, setHoveredRect] = useState<DOMRect | null>(null);
 
   const [buttonRefs, setButtonRefs] = useState<Array<HTMLButtonElement | null>>(
     []
@@ -69,8 +70,6 @@ export const CSSTabs = ({
   const navRect = navRef.current?.getBoundingClientRect();
 
   const selectedRect = buttonRefs[selectedTabIndex]?.getBoundingClientRect();
-  const hoveredRect =
-    buttonRefs[hoveredTabIndex ?? -1]?.getBoundingClientRect();
 
   const [initialElement, setInitialElement] = useState(true);
 
@@ -79,13 +78,20 @@ export const CSSTabs = ({
     setHoveredTabIndex(null);
   };
 
-  const onEnterTab = (i: number) => {
+  const onEnterTab = (
+    e: PointerEvent<HTMLButtonElement> | FocusEvent<HTMLButtonElement>,
+    i: number
+  ) => {
+    if (!e.target || !(e.target instanceof HTMLButtonElement)) return;
+
     setHoveredTabIndex((prev) => {
       if (prev != null && prev !== i) {
         setInitialElement(false);
       }
+
       return i;
     });
+    setHoveredRect(e.target.getBoundingClientRect());
   };
 
   const onSelectTab = (i: number) => {
@@ -110,8 +116,8 @@ export const CSSTabs = ({
               }
             )}
             ref={(el) => (buttonRefs[i] = el)}
-            onPointerEnter={() => onEnterTab(i)}
-            onFocus={() => onEnterTab(i)}
+            onPointerEnter={(e) => onEnterTab(e, i)}
+            onFocus={(e) => onEnterTab(e, i)}
             onClick={() => onSelectTab(i)}
           >
             {item.label}
@@ -128,9 +134,9 @@ export const CSSTabs = ({
                 }px,0px)`,
                 width: hoveredRect.width,
                 height: hoveredRect.height,
-                opacity: 1,
+                opacity: hoveredTabIndex != null ? 1 : 0,
                 transition: initialElement
-                  ? `transform 0ms, opacity 150ms, width 150ms`
+                  ? `transform 0ms, opacity 150ms, width 0ms`
                   : `transform 150ms 0ms, opacity 150ms 0ms, width 150ms`,
               }
             : {
