@@ -1,6 +1,8 @@
 import classNames from "classnames";
 import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
-import { useState } from "react";
+import { ReactNode, useState } from "react";
+
+import { Tab } from "./useTabs";
 
 const transition = {
   type: "tween",
@@ -8,15 +10,13 @@ const transition = {
   duration: 0.15,
 };
 
-type Tab = { label: string; id: string };
-
 type Props = {
   selectedTabIndex: number;
   tabs: Tab[];
   setSelectedTab: (input: [number, number]) => void;
 };
 
-export const FramerLayoutTabs = ({
+export const Tabs = ({
   tabs,
   selectedTabIndex,
   setSelectedTab,
@@ -79,3 +79,47 @@ export const FramerLayoutTabs = ({
     </motion.nav>
   );
 };
+
+const Content = ({
+  children,
+  className,
+  selectedTabIndex,
+  direction,
+}: {
+  direction: number;
+  selectedTabIndex: number;
+  children: ReactNode;
+  className?: string;
+}): JSX.Element => {
+  return (
+    <AnimatePresence exitBeforeEnter={false} custom={direction}>
+      <motion.div
+        key={selectedTabIndex}
+        variants={{
+          enter: (direction) => ({
+            opacity: 0,
+            x: direction > 0 ? 100 : -100,
+            scale: 0.8,
+          }),
+          center: { opacity: 1, x: 0, scale: 1, rotate: 0 },
+          exit: (direction) => ({
+            opacity: 0,
+            x: direction > 0 ? -100 : 100,
+            scale: 0.8,
+            position: "absolute",
+          }),
+        }}
+        transition={{ duration: 0.25 }}
+        initial={"enter"}
+        animate={"center"}
+        exit={"exit"}
+        custom={direction}
+        className={className}
+      >
+        {children}
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
+export const FramerLayout = { Tabs, Content };

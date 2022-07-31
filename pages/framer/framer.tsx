@@ -1,6 +1,8 @@
 import classNames from "classnames";
-import { useEffect, useRef, useState } from "react";
+import React, { ReactNode, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+
+import { Tab } from "./useTabs";
 
 const transition = {
   type: "tween",
@@ -8,21 +10,17 @@ const transition = {
   duration: 0.15,
 };
 
-type Tab = { label: string; id: string };
-
 type Props = {
   selectedTabIndex: number;
   tabs: Tab[];
   setSelectedTab: (input: [number, number]) => void;
 };
 
-export const FramerTabs = ({
+const Tabs = ({
   tabs,
   selectedTabIndex,
   setSelectedTab,
 }: Props): JSX.Element => {
-  const [hoveredTabIndex, setHoveredTabIndex] = useState<number | null>(null);
-
   const [buttonRefs, setButtonRefs] = useState<Array<HTMLButtonElement | null>>(
     []
   );
@@ -35,6 +33,8 @@ export const FramerTabs = ({
   const navRect = navRef.current?.getBoundingClientRect();
 
   const selectedRect = buttonRefs[selectedTabIndex]?.getBoundingClientRect();
+
+  const [hoveredTabIndex, setHoveredTabIndex] = useState<number | null>(null);
   const hoveredRect =
     buttonRefs[hoveredTabIndex ?? -1]?.getBoundingClientRect();
 
@@ -56,13 +56,13 @@ export const FramerTabs = ({
               }
             )}
             ref={(el) => (buttonRefs[i] = el)}
-            onPointerEnter={(e) => {
+            onPointerEnter={() => {
               setHoveredTabIndex(i);
             }}
-            onFocus={(e) => {
+            onFocus={() => {
               setHoveredTabIndex(i);
             }}
-            onClick={(e) => {
+            onClick={() => {
               setSelectedTab([i, i > selectedTabIndex ? 1 : -1]);
             }}
           >
@@ -115,3 +115,47 @@ export const FramerTabs = ({
     </nav>
   );
 };
+
+const Content = ({
+  children,
+  className,
+  selectedTabIndex,
+  direction,
+}: {
+  direction: number;
+  selectedTabIndex: number;
+  children: ReactNode;
+  className?: string;
+}): JSX.Element => {
+  return (
+    <AnimatePresence exitBeforeEnter={false} custom={direction}>
+      <motion.div
+        key={selectedTabIndex}
+        variants={{
+          enter: (direction) => ({
+            opacity: 0,
+            x: direction > 0 ? 100 : -100,
+            scale: 0.8,
+          }),
+          center: { opacity: 1, x: 0, scale: 1, rotate: 0 },
+          exit: (direction) => ({
+            opacity: 0,
+            x: direction > 0 ? -100 : 100,
+            scale: 0.8,
+            position: "absolute",
+          }),
+        }}
+        transition={{ duration: 0.25 }}
+        initial={"enter"}
+        animate={"center"}
+        exit={"exit"}
+        custom={direction}
+        className={className}
+      >
+        {children}
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
+export const Framer = { Tabs, Content };

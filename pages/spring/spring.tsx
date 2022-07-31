@@ -2,7 +2,7 @@ import classNames from "classnames";
 import { useEffect, useRef, useState } from "react";
 import { useTransition, animated, useSpring, easings } from "react-spring";
 
-type Tab = { label: string; id: string };
+import { Tab } from "./useTabs";
 
 type Props = {
   selectedTabIndex: number;
@@ -10,13 +10,11 @@ type Props = {
   setSelectedTab: (input: [number, number]) => void;
 };
 
-export const SpringTabs = ({
+export const Tabs = ({
   tabs,
   selectedTabIndex,
   setSelectedTab,
 }: Props): JSX.Element => {
-  const [hoveredTabIndex, setHoveredTabIndex] = useState<number | null>(null);
-
   const [buttonRefs, setButtonRefs] = useState<Array<HTMLButtonElement | null>>(
     []
   );
@@ -29,6 +27,8 @@ export const SpringTabs = ({
   const navRect = navRef.current?.getBoundingClientRect();
 
   const selectedRect = buttonRefs[selectedTabIndex]?.getBoundingClientRect();
+
+  const [hoveredTabIndex, setHoveredTabIndex] = useState<number | null>(null);
   const hoveredRect =
     buttonRefs[hoveredTabIndex ?? -1]?.getBoundingClientRect();
 
@@ -44,8 +44,6 @@ export const SpringTabs = ({
     setSelectedTab([i, i > selectedTabIndex ? 1 : -1]);
   };
 
-  const show = hoveredTabIndex != null;
-
   const stylesChangingOnUpdate =
     hoveredRect && navRect
       ? {
@@ -57,24 +55,16 @@ export const SpringTabs = ({
         }
       : {};
 
-  const bgTransition = useTransition(show, {
-    //Note there is a race condition here and this has to be a function
-    from: () =>
-      hoveredRect && navRect
-        ? {
-            ...stylesChangingOnUpdate,
-            opacity: 0,
-          }
-        : { opacity: 0 },
-    enter:
-      hoveredRect && navRect
-        ? {
-            ...stylesChangingOnUpdate,
-            opacity: 1,
-          }
-        : { opacity: 1 },
+  const bgTransition = useTransition(hoveredTabIndex != null, {
+    from: () => ({
+      ...stylesChangingOnUpdate,
+      opacity: 0,
+    }),
+    enter: {
+      ...stylesChangingOnUpdate,
+      opacity: 1,
+    },
     update: stylesChangingOnUpdate,
-
     leave: { opacity: 0 },
     config: {
       duration: 150,
@@ -139,3 +129,47 @@ export const SpringTabs = ({
     </nav>
   );
 };
+
+const Content = ({
+  selectedTabIndex,
+  direction,
+  tabs,
+  className,
+}: {
+  selectedTabIndex: number;
+  direction: number;
+  tabs: Tab[];
+
+  className?: string;
+}): JSX.Element => {
+  const transitions = useTransition(selectedTabIndex, {
+    exitBeforeEnter: false,
+    keys: null,
+    from: {
+      opacity: 0,
+      transform: `translate3d(${
+        direction > 0 ? "100" : "-100"
+      }px,0,0) scale(0.8)`,
+    },
+    enter: { opacity: 1, transform: "translate3d(0px,0,0) scale(1)" },
+    leave: {
+      opacity: 0,
+      transform: `translate3d(${
+        direction > 0 ? "-100" : "100"
+      }px,0,0) scale(0.8)`,
+      position: "absolute",
+    },
+    config: {
+      duration: 250,
+      easing: easings.easeOutCubic,
+    },
+  });
+
+  return transitions((styles, item) => (
+    <animated.div key={selectedTabIndex} style={styles} className={className}>
+      {tabs[item].children}
+    </animated.div>
+  ));
+};
+
+export const Spring = { Tabs, Content };
