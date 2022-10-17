@@ -1,4 +1,4 @@
-# Vercel Tabs Component Breakdown
+# Vercel Tabs Component 
 
 This is the companion repo to -> https://www.joshuawootonn.com/vercel-tabs-component 
 
