@@ -1,5 +1,3 @@
-# Vercel Tabs Component 
+# 🚧 This repo has been moved
 
-This is the companion repo to -> https://www.joshuawootonn.com/vercel-tabs-component 
-
-![Alt text](./public/preview.png?raw=true "preview of Vercel tabs component")
+Here is the [new location](https://github.com/joshuawootonn/react-components-from-scratch/tree/main/components/vercel-tabs) with all other components I have been working on.
